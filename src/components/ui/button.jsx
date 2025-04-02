@@ -1,10 +1,8 @@
-// src/components/ui/button.jsx
-export function Button({ children, onClick, size = "md" }) {
-  const sizeClass = size === "sm" ? "px-2 py-1 text-sm" : "px-3 py-1";
+export function Button({ children, ...props }) {
   return (
     <button
-      onClick={onClick}
-      className={`bg-blue-500 text-white rounded hover:bg-blue-600 ${sizeClass}`}
+      {...props}
+      className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded shadow text-sm"
     >
       {children}
     </button>
