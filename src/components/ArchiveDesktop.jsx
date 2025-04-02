@@ -1,89 +1,114 @@
-// ArchiveDesktop component code goes here
-// ✅ Full ArchiveDesktop component (paste this into your file)
+// Full version with draggable windows and Aoi assistant (GPT) integration
 import { useState, useRef, useEffect } from "react";
-import { FolderIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FolderIcon, Trash2Icon } from "lucide-react";
 import Draggable from "react-draggable";
 
+const OPENAI_API_KEY = "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";
+
 export default function ArchiveDesktop() {
-  const [openApp, setOpenApp] = useState(null);
-  const [unlocked, setUnlocked] = useState(false);
   const [booting, setBooting] = useState(true);
+  const [unlocked, setUnlocked] = useState(false);
+  const [mascotFace, setMascotFace] = useState("default");
+  const [sliderRef, setSliderRef] = useState(null);
+  const [handleRef, setHandleRef] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [username, setUsername] = useState("");
   const [editIndex, setEditIndex] = useState(null);
-  const [aoiInput, setAoiInput] = useState("");
-  const [aoiResponse, setAoiResponse] = useState("Hello! I am Aoi, your archive assistant. How can I help you today?");
-  const [mascotFace, setMascotFace] = useState("default");
   const [openedWindows, setOpenedWindows] = useState([]);
   const [classNotes, setClassNotes] = useState([]);
-  const [homeworkFiles, setHomeworkFiles] = useState([]);
-  const [lectureSlides, setLectureSlides] = useState([]);
+  const [noteInput, setNoteInput] = useState("");
+  const [homeworkList, setHomeworkList] = useState([]);
+  const [homeworkInput, setHomeworkInput] = useState("");
+  const [slides, setSlides] = useState([]);
+  const [slideInput, setSlideInput] = useState("");
   const [examPapers, setExamPapers] = useState([]);
-
-  const sliderRef = useRef(null);
-  const handleRef = useRef(null);
+  const [examInput, setExamInput] = useState("");
+  const [aoiInput, setAoiInput] = useState("");
+  const [aoiResponse, setAoiResponse] = useState("");
+  const mascotImg = mascotFace === "default" ? "/images/aoi-default.png" : "/images/aoi-poked.png";
 
   useEffect(() => {
-    const timer = setTimeout(() => setBooting(false), 2000);
+    const timer = setTimeout(() => setBooting(false), 2500);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (!sliderRef.current || !handleRef.current) return;
-    const slider = sliderRef.current;
-    const handle = handleRef.current;
+    if (!sliderRef || !handleRef) return;
     let isDragging = false;
     let startX = 0;
-
-    const onMouseDown = (e) => {
-      isDragging = true;
-      startX = e.clientX;
-    };
-
+    const onMouseDown = (e) => { isDragging = true; startX = e.clientX; };
     const onMouseMove = (e) => {
       if (!isDragging) return;
       const moveX = e.clientX - startX;
-      const sliderWidth = slider.offsetWidth - handle.offsetWidth;
+      const sliderWidth = sliderRef.offsetWidth - handleRef.offsetWidth;
       const newLeft = Math.min(Math.max(0, moveX), sliderWidth);
-      handle.style.left = `${newLeft}px`;
+      handleRef.style.left = `${newLeft}px`;
     };
-
     const onMouseUp = () => {
       if (!isDragging) return;
       isDragging = false;
-      const sliderWidth = slider.offsetWidth - handle.offsetWidth;
-      const handleLeft = parseInt(handle.style.left, 10);
-      if (handleLeft >= sliderWidth - 10) {
-        setUnlocked(true);
-      } else {
-        handle.style.left = `0px`;
-      }
+      const sliderWidth = sliderRef.offsetWidth - handleRef.offsetWidth;
+      const handleLeft = parseInt(handleRef.style.left, 10);
+      if (handleLeft >= sliderWidth - 10) setUnlocked(true);
+      else handleRef.style.left = `0px`;
     };
-
-    handle.addEventListener("mousedown", onMouseDown);
+    handleRef.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
-
     return () => {
-      handle.removeEventListener("mousedown", onMouseDown);
+      handleRef.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [unlocked, booting]);
+  }, [sliderRef, handleRef]);
+
+  const handleAoiSubmit = async () => {
+    const prompt = aoiInput.trim();
+    if (!prompt) return;
+    if (prompt.toLowerCase().includes("class note")) openWindow("Class Notes");
+    else if (prompt.toLowerCase().includes("homework")) openWindow("Homework");
+    else if (prompt.toLowerCase().includes("slide")) openWindow("Lecture Slides");
+    else if (prompt.toLowerCase().includes("exam")) openWindow("Exam Papers");
+    const systemPrompt = "You are Aoi, a cute assistant who helps users navigate a virtual desktop archive. Keep responses short (max 75 words).";
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: prompt }
+        ],
+        max_tokens: 100
+      })
+    });
+    const data = await response.json();
+    setAoiResponse(data.choices?.[0]?.message?.content || "Sorry, I didn’t understand that. ❓");
+    setAoiInput("");
+  };
 
   const gradientBackground = {
     backgroundImage: "linear-gradient(135deg, #dbeafe 0%, #fce7f3 100%)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat"
   };
 
-  const mascotImg = mascotFace === "default" ? "/aoi-default.png" : "/aoi-poked.png";
+  const openWindow = (appName) => {
+    if (!openedWindows.includes(appName)) setOpenedWindows([...openedWindows, appName]);
+  };
+
+  const closeWindow = (appName) => {
+    setOpenedWindows(openedWindows.filter(name => name !== appName));
+  };
 
   if (booting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-pink-600 text-3xl font-bold tracking-wider" style={gradientBackground}>
-        ⏳ Booting Aoi OS...
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center text-pink-600 text-3xl font-bold tracking-wider" style={gradientBackground}>⏳ Booting Aoi OS...</div>;
   }
 
   if (!unlocked) {
@@ -91,9 +116,9 @@ export default function ArchiveDesktop() {
       <div className="min-h-screen flex items-center justify-center relative text-white" style={gradientBackground}>
         <div className="bg-white/20 backdrop-blur-md p-6 rounded-xl text-center">
           <p className="text-xl font-semibold mb-4">🔒 Slide to Unlock</p>
-          <div ref={sliderRef} className="relative w-72 h-12 bg-white/30 rounded-full">
+          <div ref={setSliderRef} className="relative w-72 h-12 bg-white/30 rounded-full">
             <div
-              ref={handleRef}
+              ref={setHandleRef}
               className="absolute left-0 top-0 h-12 w-12 bg-white text-black font-bold flex items-center justify-center rounded-full shadow-md cursor-pointer select-none"
               style={{ transition: 'left 0.2s' }}
             >
@@ -106,54 +131,121 @@ export default function ArchiveDesktop() {
   }
 
   return (
-    <div className="min-h-screen text-black p-6 relative space-y-6" style={gradientBackground}>
-      <h1 className="text-3xl font-bold">📁 Ikeda Aoi Archive</h1>
-      <p className="text-sm text-black/70">Welcome to the pastel archive of magical knowledge ✨</p>
-
-      <div className="absolute right-4 top-4 cursor-pointer" onClick={() => setUnlocked(false)}>
-        🔒 Lock Screen
+    <div className="min-h-screen text-black p-6 relative" style={gradientBackground}>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold">📁 Ikeda Aoi Archive</h1>
+        <Button onClick={() => setUnlocked(false)}>🔒 Lock</Button>
       </div>
 
-      <div className="relative w-full h-[400px] mt-8">
-        {["Class Notes", "Homework", "Lecture Slides", "Exam Papers"].map((app, i) => (
-          <Draggable key={i} bounds="parent">
-            <div
-              className="absolute w-[110px] h-[110px] flex flex-col items-center justify-center cursor-pointer hover:scale-105 transition-transform text-center text-black"
-              style={{ left: `${60 + i * 130}px`, top: `60px` }}
-              onDoubleClick={() => {
-                if (!openedWindows.includes(app)) setOpenedWindows(prev => [...prev, app]);
-              }}
-            >
-              <div className="bg-white/80 p-3 rounded-2xl shadow-md">
-                <FolderIcon className="w-8 h-8 mb-1" />
-              </div>
-              <span className="text-xs font-semibold mt-1">{app}</span>
-            </div>
-          </Draggable>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
+        {["Class Notes", "Homework", "Lecture Slides", "Exam Papers"].map((app, index) => (
+          <div key={index} className="flex flex-col items-center cursor-pointer" onDoubleClick={() => openWindow(app)}>
+            <FolderIcon className="w-12 h-12 text-blue-600" />
+            <span className="mt-2 text-center text-sm font-semibold">{app}</span>
+          </div>
         ))}
       </div>
 
       {openedWindows.map((app, index) => (
-        <Draggable key={index} defaultPosition={{ x: 80 + index * 30, y: 200 + index * 30 }}>
-          <div className="absolute w-[300px] bg-white/90 rounded-xl shadow-lg border border-gray-300 z-50">
-            <div className="flex justify-between items-center px-4 py-2 bg-pink-200 rounded-t-xl cursor-move">
-              <span className="font-semibold">🗂️ {app}</span>
-              <button onClick={() => setOpenedWindows(openedWindows.filter(w => w !== app))} className="text-red-500 font-bold">×</button>
+        <Draggable key={index} defaultPosition={{ x: 100 + index * 30, y: 100 + index * 30 }}>
+          <div className="absolute bg-white border rounded-lg shadow-lg p-4 w-[300px]">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="font-bold">{app}</h2>
+              <button onClick={() => closeWindow(app)}>❌</button>
             </div>
-            <div className="p-4 text-sm text-gray-700">
-              <p>This is the {app} section. 🎨</p>
-              {/* 실제 기능은 이 아래에 추가할 수 있습니다 */}
-            </div>
+            {app === "Class Notes" && (
+              <div>
+                <input value={noteInput} onChange={e => setNoteInput(e.target.value)} placeholder="Write a note" className="border px-2 py-1 w-full mb-2" />
+                <Button onClick={() => { if (noteInput) { setClassNotes([...classNotes, noteInput]); setNoteInput(""); }}}>Add</Button>
+                <ul className="mt-2 text-sm list-disc list-inside">{classNotes.map((note, i) => <li key={i}>{note}</li>)}</ul>
+              </div>
+            )}
+            {app === "Homework" && (
+              <div>
+                <input value={homeworkInput} onChange={e => setHomeworkInput(e.target.value)} placeholder="New task" className="border px-2 py-1 w-full mb-2" />
+                <Button onClick={() => { if (homeworkInput) { setHomeworkList([...homeworkList, { text: homeworkInput, done: false }]); setHomeworkInput(""); }}}>Add</Button>
+                <ul className="mt-2 text-sm">
+                  {homeworkList.map((hw, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <input type="checkbox" checked={hw.done} onChange={() => setHomeworkList(homeworkList.map((h, idx) => idx === i ? { ...h, done: !h.done } : h))} />
+                      <span className={hw.done ? "line-through" : ""}>{hw.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {app === "Lecture Slides" && (
+              <div>
+                <input value={slideInput} onChange={e => setSlideInput(e.target.value)} placeholder="Slide URL" className="border px-2 py-1 w-full mb-2" />
+                <Button onClick={() => { if (slideInput) { setSlides([...slides, slideInput]); setSlideInput(""); }}}>Add</Button>
+                <ul className="mt-2 text-sm list-disc list-inside">
+                  {slides.map((url, i) => <li key={i}><a href={url} target="_blank" rel="noreferrer" className="text-blue-600 underline">{url}</a></li>)}
+                </ul>
+              </div>
+            )}
+            {app === "Exam Papers" && (
+              <div>
+                <input value={examInput} onChange={e => setExamInput(e.target.value)} placeholder="Exam name or URL" className="border px-2 py-1 w-full mb-2" />
+                <Button onClick={() => { if (examInput) { setExamPapers([...examPapers, examInput]); setExamInput(""); }}}>Add</Button>
+                <ul className="mt-2 text-sm list-disc list-inside">
+                  {examPapers.map((exam, i) => <li key={i}>{exam}</li>)}
+                </ul>
+              </div>
+            )}
           </div>
         </Draggable>
       ))}
 
-      <div className="w-full flex justify-end pr-4 z-50" onClick={() => {
-        setMascotFace("poked");
-        setTimeout(() => setMascotFace("default"), 1000);
-      }}>
-        <img src={mascotImg} alt="Aoi mascot" className="transition-all duration-300 w-20" />
+      <div className="absolute bottom-4 left-4 bg-white/90 rounded-xl shadow p-4 w-[300px]">
+        <div className="font-bold mb-1">🤖 Aoi Assistant</div>
+        <div className="text-sm mb-2 text-black/90 h-20 overflow-y-auto">{aoiResponse}</div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={aoiInput}
+            onChange={(e) => setAoiInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAoiSubmit()}
+            className="flex-1 px-2 py-1 border border-gray-300 rounded"
+            placeholder="Ask Aoi something..."
+          />
+          <Button onClick={handleAoiSubmit}>Go</Button>
+        </div>
       </div>
+
+      <div className="absolute bottom-0 w-full bg-white/80 p-4 border-t mt-8">
+        <div className="flex gap-2 mb-2">
+          <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your name" className="px-2 py-1 border rounded w-32" />
+          <input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Write a comment" className="flex-1 px-2 py-1 border rounded" />
+          <Button onClick={() => {
+            if (!newComment || !username) return;
+            const now = new Date().toLocaleTimeString();
+            const newEntry = { user: username, content: newComment, time: now };
+            setComments([...comments, newEntry]);
+            setNewComment("");
+          }}>Send</Button>
+        </div>
+        <ul className="space-y-1 text-sm">
+          {comments.map((c, i) => (
+            <li key={i} className="flex justify-between items-center">
+              <span><strong>{c.user}</strong> ({c.time}): {c.content}</span>
+              <div className="flex gap-1">
+                <Button size="sm" onClick={() => { setEditIndex(i); setNewComment(c.content); }}>✏️</Button>
+                <Button size="sm" onClick={() => setComments(comments.filter((_, idx) => idx !== i))}>🗑</Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <img
+        src={mascotImg}
+        alt="Aoi Mascot"
+        className="absolute right-6 bottom-36 w-32 h-auto cursor-pointer"
+        onClick={() => {
+          setMascotFace("poked");
+          setTimeout(() => setMascotFace("default"), 1000);
+        }}
+      />
     </div>
   );
 }
