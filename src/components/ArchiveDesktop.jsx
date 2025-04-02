@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FolderIcon, Trash2Icon } from "lucide-react";
 import Draggable from "react-draggable";
 
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 export default function ArchiveDesktop() {
   const [booting, setBooting] = useState(true);
