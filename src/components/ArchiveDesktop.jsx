@@ -1,7 +1,6 @@
 // Full version with draggable windows and Aoi assistant (GPT) integration
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { FolderIcon, Trash2Icon } from "lucide-react";
+import { FolderIcon } from "lucide-react";
 import Draggable from "react-draggable";
 
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -134,7 +133,7 @@ export default function ArchiveDesktop() {
     <div className="min-h-screen text-black p-6 relative" style={gradientBackground}>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">📁 Ikeda Aoi Archive</h1>
-        <Button onClick={() => setUnlocked(false)}>🔒 Lock</Button>
+        <button onClick={() => setUnlocked(false)} className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">🔒 Lock</button>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
@@ -156,14 +155,14 @@ export default function ArchiveDesktop() {
             {app === "Class Notes" && (
               <div>
                 <input value={noteInput} onChange={e => setNoteInput(e.target.value)} placeholder="Write a note" className="border px-2 py-1 w-full mb-2" />
-                <Button onClick={() => { if (noteInput) { setClassNotes([...classNotes, noteInput]); setNoteInput(""); }}}>Add</Button>
+                <button onClick={() => { if (noteInput) { setClassNotes([...classNotes, noteInput]); setNoteInput(""); }}} className="bg-blue-500 text-white px-2 py-1 rounded">Add</button>
                 <ul className="mt-2 text-sm list-disc list-inside">{classNotes.map((note, i) => <li key={i}>{note}</li>)}</ul>
               </div>
             )}
             {app === "Homework" && (
               <div>
                 <input value={homeworkInput} onChange={e => setHomeworkInput(e.target.value)} placeholder="New task" className="border px-2 py-1 w-full mb-2" />
-                <Button onClick={() => { if (homeworkInput) { setHomeworkList([...homeworkList, { text: homeworkInput, done: false }]); setHomeworkInput(""); }}}>Add</Button>
+                <button onClick={() => { if (homeworkInput) { setHomeworkList([...homeworkList, { text: homeworkInput, done: false }]); setHomeworkInput(""); }}} className="bg-blue-500 text-white px-2 py-1 rounded">Add</button>
                 <ul className="mt-2 text-sm">
                   {homeworkList.map((hw, i) => (
                     <li key={i} className="flex items-center gap-2">
@@ -177,7 +176,7 @@ export default function ArchiveDesktop() {
             {app === "Lecture Slides" && (
               <div>
                 <input value={slideInput} onChange={e => setSlideInput(e.target.value)} placeholder="Slide URL" className="border px-2 py-1 w-full mb-2" />
-                <Button onClick={() => { if (slideInput) { setSlides([...slides, slideInput]); setSlideInput(""); }}}>Add</Button>
+                <button onClick={() => { if (slideInput) { setSlides([...slides, slideInput]); setSlideInput(""); }}} className="bg-blue-500 text-white px-2 py-1 rounded">Add</button>
                 <ul className="mt-2 text-sm list-disc list-inside">
                   {slides.map((url, i) => <li key={i}><a href={url} target="_blank" rel="noreferrer" className="text-blue-600 underline">{url}</a></li>)}
                 </ul>
@@ -186,7 +185,7 @@ export default function ArchiveDesktop() {
             {app === "Exam Papers" && (
               <div>
                 <input value={examInput} onChange={e => setExamInput(e.target.value)} placeholder="Exam name or URL" className="border px-2 py-1 w-full mb-2" />
-                <Button onClick={() => { if (examInput) { setExamPapers([...examPapers, examInput]); setExamInput(""); }}}>Add</Button>
+                <button onClick={() => { if (examInput) { setExamPapers([...examPapers, examInput]); setExamInput(""); }}} className="bg-blue-500 text-white px-2 py-1 rounded">Add</button>
                 <ul className="mt-2 text-sm list-disc list-inside">
                   {examPapers.map((exam, i) => <li key={i}>{exam}</li>)}
                 </ul>
@@ -208,7 +207,7 @@ export default function ArchiveDesktop() {
             className="flex-1 px-2 py-1 border border-gray-300 rounded"
             placeholder="Ask Aoi something..."
           />
-          <Button onClick={handleAoiSubmit}>Go</Button>
+          <button onClick={handleAoiSubmit} className="bg-pink-500 text-white px-2 py-1 rounded">Go</button>
         </div>
       </div>
 
@@ -216,21 +215,21 @@ export default function ArchiveDesktop() {
         <div className="flex gap-2 mb-2">
           <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Your name" className="px-2 py-1 border rounded w-32" />
           <input value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Write a comment" className="flex-1 px-2 py-1 border rounded" />
-          <Button onClick={() => {
+          <button onClick={() => {
             if (!newComment || !username) return;
             const now = new Date().toLocaleTimeString();
             const newEntry = { user: username, content: newComment, time: now };
             setComments([...comments, newEntry]);
             setNewComment("");
-          }}>Send</Button>
+          }} className="bg-green-500 text-white px-2 py-1 rounded">Send</button>
         </div>
         <ul className="space-y-1 text-sm">
           {comments.map((c, i) => (
             <li key={i} className="flex justify-between items-center">
               <span><strong>{c.user}</strong> ({c.time}): {c.content}</span>
               <div className="flex gap-1">
-                <Button size="sm" onClick={() => { setEditIndex(i); setNewComment(c.content); }}>✏️</Button>
-                <Button size="sm" onClick={() => setComments(comments.filter((_, idx) => idx !== i))}>🗑</Button>
+                <button onClick={() => { setEditIndex(i); setNewComment(c.content); }} className="text-xs px-1 py-0.5 bg-yellow-300 rounded">✏️</button>
+                <button onClick={() => setComments(comments.filter((_, idx) => idx !== i))} className="text-xs px-1 py-0.5 bg-red-400 text-white rounded">🗑</button>
               </div>
             </li>
           ))}
