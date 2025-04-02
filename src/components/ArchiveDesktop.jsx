@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { FolderIcon } from "lucide-react";
 import Draggable from "react-draggable";
+import { Button } from "./ui/Button";
 
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
